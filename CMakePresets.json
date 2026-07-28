@@ -1,0 +1,58 @@
+{
+	"version": 3,
+	"configurePresets": [
+		{
+			"name": "msvc-ninja-base",
+			"hidden": true,
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/build/${presetName}",
+			"cacheVariables": {
+				"CMAKE_C_COMPILER": "cl.exe",
+				"CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+				"TERRA_FIRMA_2_API_DIR": "${sourceDir}/../land/src/Api/include",
+				"TERRA_FIRMA_2_PLUGINS_DIR": "${sourceDir}/../land/assets/plugins"
+			},
+			"architecture": {
+				"value": "x64",
+				"strategy": "external"
+			},
+			"toolset": {
+				"value": "host=x64",
+				"strategy": "external"
+			}
+		},
+		{
+			"name": "msvc-debug",
+			"displayName": "MSVC x64 Debug (Ninja)",
+			"description": "Targeting Windows x64 with Visual Studio Build Tools",
+			"inherits": "msvc-ninja-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "msvc-release",
+			"displayName": "MSVC x64 Release (Ninja)",
+			"description": "Targeting Windows x64 with Visual Studio Build Tools",
+			"inherits": "msvc-ninja-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "msvc-debug",
+			"configurePreset": "msvc-debug"
+		},
+		{
+			"name": "msvc-debug-install",
+      "inherits": "msvc-debug",
+      "targets": "install"
+		},
+		{
+			"name": "msvc-release",
+			"configurePreset": "msvc-release"
+		}
+	]
+}

@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://schemastore.org/clangd.json
+
+CompileFlags:
+  CompilationDatabase: build/
+  Add: 
+    - -xc-header
+    - -std=c23
+  Remove:
+    - -std=c++26

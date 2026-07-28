@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://json.schemastore.org/clang-format.json
+
+BasedOnStyle: llvm
+IndentWidth: 4
+UseTab: Never
+TabWidth: 4
+PointerAlignment: Left
+AlignAfterOpenBracket: BlockIndent
