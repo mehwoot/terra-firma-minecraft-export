@@ -6,7 +6,16 @@
 
 #include <stdio.h>
 
-static tf_v0_GameApi api;
+tf_v0_GameApi api;
+
+
+void reportFatalError(char * what){
+    api.reportFatalError(api.context, what);
+}
+
+void reportFatalErrorC(char const * what){
+    api.reportFatalError(api.context, what);
+}
 
 void debugButtonCallback(void* data){
 }
@@ -40,7 +49,7 @@ void exportFunction(tf_v0_ExportDataApi exportDataApi){
         for (int y = 0; y < worldData.dimensions.y; ++y) {
             void* instance = worldData.heightCache.instance;
             tf_v0_vec2 pos = {x*1.f,y*1.f};
-            float const val = worldData.heightCache.getHeightAt(instance, pos, tf_v0_HM_LAND_AND_WATER);
+            float const val = worldData.heightCache.getHeightAt(instance, pos, TF_V0_HM_LAND_AND_WATER);
             if(val!=0){
                 printf("    [%i][%i] height@ = %f\n", x, y, val);
             }

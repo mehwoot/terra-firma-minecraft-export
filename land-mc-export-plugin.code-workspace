@@ -120,7 +120,17 @@
 			"xutility": "cpp",
 			"*.ipp": "cpp"
 		},
-		"cmake-debug-disabled": true
+		"cmake-debug-disabled": true,
+		"files.exclude": {
+			"**/.git": true,
+			"**/.svn": true,
+			"**/.hg": true,
+			"**/.DS_Store": true,
+			"**/Thumbs.db": true,
+			"//.*": true
+		},
+		"explorerExclude.backup": {},
+		"cSpell.enabled": false
 	},
 	
 }
