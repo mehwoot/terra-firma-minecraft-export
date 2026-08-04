@@ -21,7 +21,7 @@ namespace Util {
 		};
 		WindowsGPUInfo findWindowsGPUInfo(const std::string& openglRendererName);
 		void safeCall(const std::function<void()>& code);
-		void init();
+		// void init();
 		void errorMessage(const std::string& message);
 		// MemoryStats getMemoryStats();
 		void openURL(const char* url);

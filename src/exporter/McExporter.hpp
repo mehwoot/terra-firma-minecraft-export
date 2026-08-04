@@ -56,7 +56,7 @@ class McExporter{
 
 	void run(tf_v0_ExportDataApi& api);
 
-	private:
-		static std::list<Simulation::Export::Minecraft::ThemeDefinition> themeDefinitions;
+	// private:
+	// 	static std::list<Simulation::Export::Minecraft::ThemeDefinition> themeDefinitions;
 };
 }

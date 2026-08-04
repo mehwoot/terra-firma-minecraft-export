@@ -448,6 +448,42 @@ Buffer exportRegion(int regionX, int regionZ, const McExporter::ExportInstance& 
 
 }
 
+McExporter::AsyncCoordinator::AsyncCoordinator(const ExportInstance& config) : config(config) {
+
+}
+void McExporter::AsyncCoordinator::addRegionToExport(int x, int z) {
+    std::scoped_lock lock(inputLock);
+    inputRegions.emplace_back(x, z);
+}
+
+std::optional<McExporter::AsyncCoordinator::ExportRegion> McExporter::AsyncCoordinator::popInput() {
+    std::scoped_lock lock(inputLock);
+
+    if (inputRegions.size() > 0) {
+        auto exportRegion = inputRegions.front();
+        inputRegions.pop_front();
+        return exportRegion;
+    } else {
+        return std::nullopt;
+    }
+}
+
+void McExporter::AsyncCoordinator::pushOutput(Output output) {
+    std::scoped_lock lock(outputLock);
+    outputBuffers.emplace_back(std::move(output));
+}
+
+std::optional<McExporter::AsyncCoordinator::Output> McExporter::AsyncCoordinator::popOutput() {
+    std::scoped_lock lock(outputLock);
+    if (outputBuffers.size() > 0) {
+        Output output = std::move(outputBuffers.front());
+        outputBuffers.pop_front();
+        return output;
+    } else {
+        return std::nullopt;
+    }
+}
+
 void McExporter::run(tf_v0_ExportDataApi& api) {
 
 	// const auto& options = *reinterpret_cast<Options*>(api.getOptions(api.instance));

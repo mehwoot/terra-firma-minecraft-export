@@ -23,9 +23,9 @@
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "oleaut32.lib")
 
-void Util::OS::init() {
-    timeBeginPeriod(1);
-}
+// void Util::OS::init() {
+//     timeBeginPeriod(1);
+// }
 
 // bool Util::OS::windowIsActive(ci::app::WindowRef window) {
 // 	return (HWND)window->getNative() == GetFocus();
