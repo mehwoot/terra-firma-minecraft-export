@@ -1,4 +1,5 @@
 #include "Chunk.h"
+#include "mc-export-plugin-module.h"
 #include <stdexcept>
 
 using namespace Simulation;
@@ -293,7 +294,7 @@ void Section::setBlock(int index, int block) {
 int BlockRegistry::getId(const Block& block) const {
 	auto it = blockToId.find(block);
 	if (it == blockToId.end()) {
-		throw ::Exception(std::format("Block not found in registry: {}", block.name));
+		reportFatalErrorC(std::format("Block not found in registry: {}", block.name).c_str());
 	}
 	return it->second;
 }
@@ -313,7 +314,7 @@ BlockRegistry::BlockRegistry() {
 Block BlockRegistry::getBlock(int id) const {
 	auto it = idToBlock.find(id);
 	if (it == idToBlock.end()) {
-		throw ::Exception(std::format("Block id not found in registry: {}", id));
+		reportFatalErrorC(std::format("Block id not found in registry: {}", id).c_str());
 	}
 	return it->second;
 }
@@ -382,7 +383,9 @@ std::map<std::string, int> BlockStates::getBlockCounts() const {
 	}
 
 	for (auto& value : data) {
-		if(!(value < palette.blocks.size(), "out of range");
+		if(!(value < palette.blocks.size())){
+			reportFatalErrorC("out of range");
+		}
 		values[palette.blockRegistry.getBlock(palette.blocks[value]).name]++;
 	}
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "Chunk.h"
+#include "Util/Compare.h"
 
 #include <memory>
 
@@ -18,10 +19,21 @@ namespace Simulation {
 				bool valid = false;
 			};
 
+			
+			// bool operator<(const tf_v0_vec3& a, const tf_v0_vec3& b) {
+			// 	return Util::compare(a.x, b.x, a.y, b.y, a.z, b.z);
+			// }
+
+			struct tf_v0_ivec2_less{
+				static bool operator()(const tf_v0_ivec2& a, const tf_v0_ivec2& b) {
+					return Util::compare(a.x, b.x, a.y, b.y);
+				}
+			};
+
 			struct Region {
 				const BlockRegistry& blockRegistry;
 				std::vector<Chunk> chunks;
-				std::map<tf_v0_ivec2, Util::Serialisation::NBT::TagUPtr> tagsByChunk;
+				std::map<tf_v0_ivec2, Util::Serialisation::NBT::TagUPtr, Minecraft::tf_v0_ivec2_less> tagsByChunk;
 				tf_v0_ivec2 position;
 				tf_v0_ivec2 firstChunkCoordinates;
 				tf_v0_ivec2 firstBlockCoordinates;

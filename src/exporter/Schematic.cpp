@@ -1,8 +1,9 @@
-#include "Includes.h"
 #include "Schematic.h"
-#include "../Exceptions.h"
-#include "Util/Serialisation/NBT/Parser.h"
-#include "Util/Serialisation/Compression.h"
+
+#include "Util/Parser.h"
+#include "Util/Compression.h"
+#include "exporter/Util/Compression.h"
+#include "mc-export-plugin-module.h"
 
 using namespace Simulation::Export::Minecraft;
 using namespace Util::Serialisation::NBT;
@@ -36,7 +37,7 @@ Schematic::Schematic(BlockRegistry& blockRegistry, const std::filesystem::path& 
 	// Load the NBT file
 	auto tags = Util::Serialisation::NBT::Parser().parse(readBuffer);
 	if (tags.size() != 1) {
-		throw FileNotImportable("Invalid schematic file - should have one root tag");
+		reportFatalErrorC("Invalid schematic file - should have one root tag");
 	}
 	auto& root = tags.front()->as<Util::Serialisation::NBT::TagCompound>();
 	
@@ -132,19 +133,19 @@ Schematic::Schematic(BlockRegistry& blockRegistry, const std::filesystem::path& 
 	
 	// Validate we have required data
 	if (version != 2) {
-		throw FileNotImportable("Unsupported schematic version - only version 2 supported");
+		reportFatalErrorC("Unsupported schematic version - only version 2 supported");
 	}
 	if (width == 0 || height == 0 || length == 0) {
-		throw FileNotImportable("Invalid schematic dimensions");
+		reportFatalErrorC("Invalid schematic dimensions");
 	}
 	if (palette.empty() || blockData.empty()) {
-		throw FileNotImportable("Missing palette or block data");
+		reportFatalErrorC("Missing palette or block data");
 	}
 	
 	// Expected block data size should be width * height * length
 	size_t expectedSize = (size_t)width * height * length;
 	if (blockData.size() != expectedSize) {
-		throw FileNotImportable(std::format("Block data size {} doesn't match expected size {}", blockData.size(), expectedSize));
+		reportFatalErrorC(std::format("Block data size {} doesn't match expected size {}", blockData.size(), expectedSize).c_str());
 	}
 	
 	// Convert blocks to registry IDs and store positions
@@ -152,7 +153,7 @@ Schematic::Schematic(BlockRegistry& blockRegistry, const std::filesystem::path& 
 	for (size_t i = 0; i < blockData.size(); i++) {
 		uint32_t paletteIndex = blockData[i];
 		if (paletteIndex >= palette.size()) {
-			throw FileNotImportable(std::format("Invalid palette index {} (max {})", paletteIndex, palette.size() - 1));
+			reportFatalErrorC(std::format("Invalid palette index {} (max {})", paletteIndex, palette.size() - 1).c_str());
 		}
 		
 		const Block& block = palette[paletteIndex];
@@ -172,6 +173,6 @@ Schematic::Schematic(BlockRegistry& blockRegistry, const std::filesystem::path& 
 		
 		// Register block with registry and store
 		int blockId = blockRegistry.getIdOrRegister(block);
-		blocks.push_back({ blockId, livec3(x, y, z) });
+		blocks.push_back({ blockId, tf_v0_ivec3(x, y, z) });
 	}
 }

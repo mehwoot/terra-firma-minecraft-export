@@ -1,7 +1,9 @@
-#include "Includes.h"
 #include "HeightDatapack.h"
 
-static int getPackFormat(Simulation::Export::Minecraft::MinecraftVersion version) {
+#include <ostream>
+#include <fstream>
+
+static int getPackFormat(MinecraftVersion version) {
 	using namespace Simulation::Export::Minecraft;
 	switch (version) {
 		case MinecraftVersion::V1_20_1: return 15;
@@ -12,11 +14,11 @@ static int getPackFormat(Simulation::Export::Minecraft::MinecraftVersion version
 	}
 }
 
-static bool usesMinMaxFormat(Simulation::Export::Minecraft::MinecraftVersion version) {
-	return version >= Simulation::Export::Minecraft::MinecraftVersion::V26_1;
+static bool usesMinMaxFormat(MinecraftVersion version) {
+	return version >= MinecraftVersion::V26_1;
 }
 
-static std::string formatMCMeta(int packFormat, const std::string& description, Simulation::Export::Minecraft::MinecraftVersion version) {
+static std::string formatMCMeta(int packFormat, const std::string& description, MinecraftVersion version) {
 	using namespace Simulation::Export::Minecraft;
 	if (version == MinecraftVersion::V1_20_1) {
 		return std::format(R"<<(

@@ -1,12 +1,14 @@
 #pragma once
 
 #include "Options.h"
-#include "Theme.hpp"
+#include "Theme.h"
+#include "Chunk.h"
 
 #include <Api/v0/ExporterApi.h>
 
 #include <list>
 #include <mutex>
+#include <filesystem>
 
 namespace Simulation::Export::Minecraft{
 class McExporter{

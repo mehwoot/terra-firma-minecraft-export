@@ -1,8 +1,10 @@
-#include "Includes.h"
+
 #include "Theme.h"
-#include "../Exceptions.h"
 #include "Chunk.h"
-#include "Util/Config.h"
+#include "Schematic.h"
+#include "Util/Parser.h"
+#include "Util/Strings.h"
+#include "mc-export-plugin-module.h"
 
 using namespace Simulation;
 using namespace Simulation::Export;
@@ -21,27 +23,27 @@ PlantDefinition PlantDefinition::deserialise(Util::Serialisation::NBT::TagCompou
 		} else if (child->name == "folder") {
 			value.folderPath = child->as<NBT::TagString>().value;
 		} else {
-			throw ExportFailed(std::format("Plant {} does not have a schematic or single block defined", value.name));
+			reportFatalErrorC(std::format("Plant {} does not have a schematic or single block defined", value.name).c_str());
 		}
 	}
 
 	return value;
 }
 
-void RegionBiomes::setBiome(const livec2& position, BiomeInstance biome) {
+void RegionBiomes::setBiome(const tf_v0_ivec2& position, BiomeInstance biome) {
 	biomes.emplace(getIndex(position), std::move(biome));
 }
 
-const BiomeInstance& RegionBiomes::getBiome(const livec2& position) const {
+const BiomeInstance& RegionBiomes::getBiome(const tf_v0_ivec2& position) const {
 	int index = getIndex(position);
 	auto biomeIt = biomes.find(index);
 	if (biomeIt != biomes.end()) {
 		return biomeIt->second;
 	}
-	throw ExportFailed("biome missing");
+	reportFatalErrorC("biome missing");
 }
 
-int RegionBiomes::getIndex(const livec2& position) const {
+int RegionBiomes::getIndex(const tf_v0_ivec2& position) const {
 	return std::clamp(((position.y / 16) * 32) + (position.x / 16), 0, 1023);
 }
 
@@ -72,7 +74,7 @@ void Theme::loadGenerators(BlockRegistry& blockRegistry) {
 		if (plantDefinition.schematicPath.has_value()) {
 			auto& schematicPath = plantDefinition.schematicPath.value();
 			if (!std::filesystem::exists(schematicPath)) {
-				throw FileNotLoadable(schematicPath, std::format("Plant schematic file not found: {}", Util::safeString(schematicPath)));
+				reportFatalErrorC(std::format("Plant schematic file not found: {}", Util::safeString(schematicPath)).c_str());
 			}
 			Schematic schematic(blockRegistry, schematicPath);
 			placeables.emplace(plantDefinition.id, std::make_unique<Placeable>(plantDefinition.name, schematic.getBlocks()));
@@ -82,7 +84,7 @@ void Theme::loadGenerators(BlockRegistry& blockRegistry) {
 		} else if (plantDefinition.folderPath.has_value()) {
 			auto& folderPath = plantDefinition.folderPath.value();
 			if (!std::filesystem::exists(folderPath) || !std::filesystem::is_directory(folderPath)) {
-				throw FileNotLoadable(folderPath, std::format("Plant folder not found: {}", Util::safeString(folderPath)));
+				reportFatalErrorC(std::format("Plant folder not found: {}", Util::safeString(folderPath)).c_str());
 			}
 			std::vector<Placeable> children;
 			children.reserve(16);
@@ -93,21 +95,21 @@ void Theme::loadGenerators(BlockRegistry& blockRegistry) {
 				}
 			}
 			if (children.size() == 0) {
-				throw FileNotLoadable(folderPath, std::format("No .schematic files found in plant folder: {}", Util::safeString(folderPath)));
+				reportFatalErrorC(std::format("No .schematic files found in plant folder: {}", Util::safeString(folderPath)).c_str());
 			}
 			placeables.emplace(plantDefinition.id, std::make_unique<CollectionPlaceable>(plantDefinition.name, std::move(children)));
 		} else {
-			throw ExportFailed(std::format("Plant definition {} has no generator", name));
+			reportFatalErrorC(std::format("Plant definition {} has no generator", name).c_str());
 		}
 	}
 
 	for (auto& [name, oreDefinition] : oreDefinitions) {
 		if (!oreDefinition.schematicFolder.has_value()) {
-			throw ExportFailed(std::format("Ore definition {} has no schematic folder", name));
+			reportFatalErrorC(std::format("Ore definition {} has no schematic folder", name).c_str());
 		}
 		auto folderPath = schematicsFolder / oreDefinition.schematicFolder.value();
 		if (!std::filesystem::exists(folderPath) || !std::filesystem::is_directory(folderPath)) {
-			throw FileNotLoadable(folderPath, std::format("Ore schematic folder not found: {}", Util::safeString(folderPath)));
+			reportFatalErrorC(std::format("Ore schematic folder not found: {}", Util::safeString(folderPath)).c_str());
 		}
 		std::vector<Placeable> children;
 		children.reserve(16);
@@ -119,7 +121,7 @@ void Theme::loadGenerators(BlockRegistry& blockRegistry) {
 			}
 		}
 		if (children.size() == 0) {
-			soft_assert(false, std::format("No .schematic files found in ore folder: {}", Util::safeString(folderPath)));
+			reportNonFatalErrorC(std::format("No .schematic files found in ore folder: {}", Util::safeString(folderPath)).c_str());
 			continue;
 		}
 		int placeableId = plantIdUpto++;
@@ -146,11 +148,11 @@ std::list<BiomeDefinition::Plant> Theme::deserialisePlants(Util::Serialisation::
 			}
 		}
 		if (templateName.size() == 0) {
-			throw ParseError(std::format("Tree {} missing template", name));
+			reportFatalErrorC(std::format("Tree {} missing template", name).c_str());
 		}
 		auto idIt = plantDefinitions.find(templateName);
 		if (idIt == plantDefinitions.end()) {
-			throw ParseError(std::format("Tree template {} not found in biome", templateName));
+			reportFatalErrorC(std::format("Tree template {} not found in biome", templateName).c_str());
 		}
 		plants.emplace_back(idIt->second.id, probabilityLimit);
 	}
@@ -178,7 +180,7 @@ void Theme::loadBiomes(const Util::Serialisation::NBT::TagUPtr& tag) {
 		}
 
 		if (minecraftId.empty()) {
-			throw ParseError(std::format("Biome {} missing minecraft_id", name));
+			reportFatalErrorC(std::format("Biome {} missing minecraft_id", name).c_str());
 		}
 
 		biomeDefinitions.emplace(name, BiomeDefinition{ std::move(trees), std::move(shrubs), name, minecraftId });
@@ -194,26 +196,22 @@ void Theme::loadOreDefinitions(const Util::Serialisation::NBT::TagUPtr& tag) {
 }
 
 void Theme::load(NBT::TagCompound& biomeConfig) {
-	try {
-		auto& root = biomeConfig;
-		auto plantsChildIt = std::find_if(root.children.begin(), root.children.end(), [](const NBT::TagUPtr& child) { return child->name == "plants"; });
-		if (plantsChildIt == root.children.end()) {
-			throw FileNotLoadable({}, "Parsing minecraft export config failed - no plants tag under root");
-		}
-		loadPlantDefinitions(*plantsChildIt);
+	auto& root = biomeConfig;
+	auto plantsChildIt = std::find_if(root.children.begin(), root.children.end(), [](const NBT::TagUPtr& child) { return child->name == "plants"; });
+	if (plantsChildIt == root.children.end()) {
+		reportNonFatalErrorC("Parsing minecraft export config failed - no plants tag under root");
+	}
+	loadPlantDefinitions(*plantsChildIt);
 
-		auto biomesChildIt = std::find_if(root.children.begin(), root.children.end(), [](const NBT::TagUPtr& child) { return child->name == "biomes"; });
-		if (biomesChildIt == root.children.end()) {
-			throw FileNotLoadable({}, "Parsing minecraft export config failed - no biomes tag under root");
-		}
-		loadBiomes(*biomesChildIt);
+	auto biomesChildIt = std::find_if(root.children.begin(), root.children.end(), [](const NBT::TagUPtr& child) { return child->name == "biomes"; });
+	if (biomesChildIt == root.children.end()) {
+		reportNonFatalErrorC("Parsing minecraft export config failed - no biomes tag under root");
+	}
+	loadBiomes(*biomesChildIt);
 
-		auto oresChildIt = std::find_if(root.children.begin(), root.children.end(), [](const NBT::TagUPtr& child) { return child->name == "ores"; });
-		if (oresChildIt != root.children.end()) {
-			loadOreDefinitions(*oresChildIt);
-		}
-	} catch (const ::Exception& error) {
-		throw FileNotLoadable({}, "Parsing minecraft export config failed - "s + error.getMessage());
+	auto oresChildIt = std::find_if(root.children.begin(), root.children.end(), [](const NBT::TagUPtr& child) { return child->name == "ores"; });
+	if (oresChildIt != root.children.end()) {
+		loadOreDefinitions(*oresChildIt);
 	}
 }
 
@@ -222,13 +220,13 @@ const BiomeDefinition& Theme::getBiomeDefinition(const std::string& name) const 
 	if (biomeDefinitionIt != biomeDefinitions.end()) {
 		return biomeDefinitionIt->second;
 	}
-	throw ExportFailed(std::format("biome definition {} missing", name));
+	reportFatalErrorC(std::format("biome definition {} missing", name).c_str());
 }
 
 void Theme::generate(Region& region, const Placement& placement) const {
 	auto placeableIt = placeables.find(placement.placeableId);
 	if (placeableIt == placeables.end()) {
-		throw ExportFailed(std::format("placeable {} missing", placement.placeableId));
+		reportFatalErrorC(std::format("placeable {} missing", placement.placeableId).c_str());
 	}
 	placeableIt->second->generate(region, placement.position, placement.randSeed);
 }
@@ -243,7 +241,7 @@ void Theme::copyDatapackFiles(const std::filesystem::path& worldFolder) const {
 
 	if (!std::filesystem::exists(destinationDatapackFolder)) {
 		if (!std::filesystem::create_directories(destinationDatapackFolder)) {
-			throw ExportFailed("Could not create datapack folder");
+			reportFatalErrorC("Could not create datapack folder");
 		}
 	}
 

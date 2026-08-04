@@ -6,29 +6,37 @@
 
 #include <stdio.h>
 
-tf_v0_GameApi api;
+tf_v0_GameApi gameApi;
 
 
 void reportFatalError(char * what){
-    api.reportFatalError(api.context, what);
+    gameApi.reportFatalError(gameApi.context, what);
 }
 
 void reportFatalErrorC(char const * what){
-    api.reportFatalError(api.context, what);
+    gameApi.reportFatalError(gameApi.context, what);
+}
+
+void reportNonFatalError(char * what){
+    gameApi.reportNonFatalError(gameApi.context, what);
+}
+
+void reportNonFatalErrorC(char const * what){
+    gameApi.reportNonFatalError(gameApi.context, what);
 }
 
 void debugButtonCallback(void* data){
 }
 
 void pluginOnLoad(tf_v0_GameApi newApi){
-    api = newApi;
-    api.log(api.context, "tf2-mc-export pluginOnLoad running");
+    gameApi = newApi;
+    gameApi.log(gameApi.context, "tf2-mc-export pluginOnLoad running");
 
-    api.registerDebugButton(api.context, "tf2-mc-export debugButton", &debugButtonCallback, 0);
+    gameApi.registerDebugButton(gameApi.context, "tf2-mc-export debugButton", &debugButtonCallback, 0);
 }
 
 void pluginUnload(){
-    api.log(api.context, "tf2-mc-export pluginUnload running");
+    gameApi.log(gameApi.context, "tf2-mc-export pluginUnload running");
 }
 
 void exportFunction(tf_v0_ExportDataApi exportDataApi){

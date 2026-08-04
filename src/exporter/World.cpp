@@ -1,7 +1,7 @@
-#include "Includes.h"
+
 #include "World.h"
-#include "Util/Serialisation/Compression.h"
-#include "Util/Serialisation/NBT/Tags.h"
+#include "Util/Compression.h"
+#include "Util/Tags.h"
 
 using namespace Simulation;
 using namespace Simulation::Export;

@@ -1,8 +1,9 @@
 
 #include "Region.h"
 #include "Util/miniz.h"
-#include "Util/Compression.h"
-#include "Util/Serialisation/NBT/Parser.h"
+#include "Util/Parser.h"
+
+#include "mc-export-plugin-module.h"
 
 using namespace Simulation;
 using namespace Simulation::Export;
@@ -51,7 +52,7 @@ Region::Region(BlockRegistry& blockRegistry, tf_v0_ivec2 position, Buffer& buffe
 		int32_t length = buffer.read<int32_t>();
 		int8_t compression = buffer.read<int8_t>();
 		if (compression != 2) {
-			throw FileNotImportable("unsupported compression type");
+			reportFatalErrorC("unsupported compression type");
 		}
 
 		unsigned long uncompressedLength = 1024 * 1024;
@@ -61,7 +62,7 @@ Region::Region(BlockRegistry& blockRegistry, tf_v0_ivec2 position, Buffer& buffe
 			reinterpret_cast<const unsigned char*>(buffer.getCurrentPosition()), uncompressedLength
 		);
 		if (result != MZ_OK) {
-			throw FileNotImportable("zlib decompression failed");
+			reportFatalErrorC("zlib decompression failed");
 		}
 
 		Util::Serialisation::NBT::Parser parser;
@@ -70,17 +71,17 @@ Region::Region(BlockRegistry& blockRegistry, tf_v0_ivec2 position, Buffer& buffe
 		auto tags = parser.parse(buffer);
 
 		if (tags.size() != 1) {
-			throw FileNotImportable("could not parse tags from chunk");
+			reportFatalErrorC("could not parse tags from chunk");
 		}
 		chunks.emplace_back(*tags.front(), blockRegistry);
 		tagsByChunk.try_emplace(tf_v0_ivec2(xPos, zPos), std::move(tags.front()));
 	}
 }
 
-void Region::setWorldRatio(float worldRatio, ci::ivec2 worldSizeMinecraftUnits) {
+void Region::setWorldRatio(float worldRatio, tf_v0_ivec2 worldSizeMinecraftUnits) {
 	this->worldRatio = worldRatio;
-	lvec2 firstBlockMinecraftCoordinates = (position * 512) + lvec2(worldSizeMinecraftUnits.x / 2.f, worldSizeMinecraftUnits.y / 2.f);
-	firstBlockWorldCoordinates = wvec2(firstBlockMinecraftCoordinates.x / worldRatio, firstBlockMinecraftCoordinates.y / worldRatio);
+	tf_v0_vec2 firstBlockMinecraftCoordinates = tf_v0_vec2((position.x * 512) + worldSizeMinecraftUnits.x / 2.f, (position.y * 512) + worldSizeMinecraftUnits.y / 2.f);
+	firstBlockWorldCoordinates = tf_v0_vec2(firstBlockMinecraftCoordinates.x / worldRatio, firstBlockMinecraftCoordinates.y / worldRatio);
 }
 
 std::vector<CompressedChunk> Region::compressChunks() {
@@ -88,7 +89,7 @@ std::vector<CompressedChunk> Region::compressChunks() {
 	compressedChunks.reserve(1024);
 
 	if (chunks.size() != 1024) {
-		throw FileNotImportable("incorrect number of chunk meta data");
+		reportFatalErrorC("incorrect number of chunk meta data");
 	}
 
 	for (auto& chunk : chunks) {
@@ -106,7 +107,7 @@ std::vector<CompressedChunk> Region::compressChunks() {
 			);
 
 			if (result != MZ_OK) {
-				throw FileNotImportable("zlib compression failed");
+				reportFatalErrorC("zlib compression failed");
 			}
 
 			compressedChunks.emplace_back(std::move(compressedData), static_cast<uint32_t>(compressedLength), true);
@@ -121,7 +122,7 @@ std::vector<CompressedChunk> Region::compressChunks() {
 Buffer Region::write() {
 	std::vector<CompressedChunk> compressedChunks = compressChunks();
 	if (compressedChunks.size() != 1024) {
-		throw FileNotImportable("incorrect number of chunk meta data");
+		reportFatalErrorC("incorrect number of chunk meta data");
 	}
 
 	Buffer buffer(1024 * 1024 * 16);
@@ -164,7 +165,7 @@ Buffer Region::write() {
 }
 
 void Region::setLighting(tf_v0_ivec2 position, int y, uint8_t light) {
-	tf_v0_ivec2 chunkCoordinates = Util::convertLocalToLocalInt(position, 1, 16);
+	tf_v0_ivec2 chunkCoordinates = tf_v0_convertLocalToLocalInt(position, 1, 16);
 	if (position.x >= 0 && position.y >= 0 && position.x < 512 && position.y < 512) {
 		int chunkNumber = (chunkCoordinates.y * 32) + chunkCoordinates.x;
 		auto& chunk = chunks[chunkNumber];
@@ -172,8 +173,8 @@ void Region::setLighting(tf_v0_ivec2 position, int y, uint8_t light) {
 	}
 }
 
-void Region::setAllBlocksBetween(tf_v0_ivec2 position, int yFrom, int yTo, int block) {
-	tf_v0_ivec2 chunkCoordinates = Util::convertLocalToLocalInt(position, 1, 16);
+void Region::setAllBlocksBetweenLocal(tf_v0_ivec2 position, int yFrom, int yTo, int block) {
+	tf_v0_ivec2 chunkCoordinates = tf_v0_convertLocalToLocalInt(position, 1, 16);
 	if (position.x >= 0 && position.y >= 0 && position.x < 512 && position.y < 512) {
 		int chunkNumber = (chunkCoordinates.y * 32) + chunkCoordinates.x;
 		auto& chunk = chunks[chunkNumber];
@@ -182,7 +183,7 @@ void Region::setAllBlocksBetween(tf_v0_ivec2 position, int yFrom, int yTo, int b
 }
 
 void Region::setTopBlocksTo(tf_v0_ivec2 position, int air, int block) {
-	tf_v0_ivec2 chunkCoordinates = Util::convertLocalToLocalInt(position, 1, 16);
+	tf_v0_ivec2 chunkCoordinates = tf_v0_convertLocalToLocalInt(position, 1, 16);
 	if (position.x >= 0 && position.y >= 0 && position.x < 512 && position.y < 512) {
 		int chunkNumber = (chunkCoordinates.y * 32) + chunkCoordinates.x;
 		auto& chunk = chunks[chunkNumber];
@@ -191,7 +192,7 @@ void Region::setTopBlocksTo(tf_v0_ivec2 position, int air, int block) {
 }
 
 void Region::setIfNotAir(tf_v0_ivec2 position, int y, int air, int block) {
-	tf_v0_ivec2 chunkCoordinates = Util::convertLocalToLocalInt(position, 1, 16);
+	tf_v0_ivec2 chunkCoordinates = tf_v0_convertLocalToLocalInt(position, 1, 16);
 	if (position.x >= 0 && position.y >= 0 && position.x < 512 && position.y < 512) {
 		int chunkNumber = (chunkCoordinates.y * 32) + chunkCoordinates.x;
 		auto& chunk = chunks[chunkNumber];
@@ -199,11 +200,11 @@ void Region::setIfNotAir(tf_v0_ivec2 position, int y, int air, int block) {
 	}
 }
 
-void Region::setAllBlocksBetween(tf_v0_ivec2 position, int yFrom, int yTo, int block) {
-	tf_v0_ivec2 regionCoordinates = tf_v0_ivec2(position) - firstBlockCoordinates;
+void Region::setAllBlocksBetweenWorld(tf_v0_ivec2 position, int yFrom, int yTo, int block) {
+	tf_v0_ivec2 regionCoordinates = tf_v0_ivec2(position.x- firstBlockCoordinates.x, position.y-firstBlockWorldCoordinates.y);
 	if (regionCoordinates.x < 0 || regionCoordinates.y < 0 || regionCoordinates.x >= 512 || regionCoordinates.y >= 512) return;
 
-	setAllBlocksBetween(regionCoordinates, yFrom, yTo, block);
+	setAllBlocksBetweenLocal(regionCoordinates, yFrom, yTo, block);
 }
 
 void Region::makeFlat() {
@@ -212,6 +213,6 @@ void Region::makeFlat() {
 	}
 }
 
-wvec2 Region::convertMinecraftRegionCoordinatesToGameWorldCoordinates(lvec2 regionCoordinates) {
-	return firstBlockWorldCoordinates + wvec2(regionCoordinates.x / worldRatio, regionCoordinates.y / worldRatio);
+tf_v0_vec2 Region::convertMinecraftRegionCoordinatesToGameWorldCoordinates(tf_v0_vec2 regionCoordinates) {
+	return tf_v0_vec2(firstBlockWorldCoordinates.x + regionCoordinates.x / worldRatio, firstBlockWorldCoordinates.y + regionCoordinates.y / worldRatio);
 }

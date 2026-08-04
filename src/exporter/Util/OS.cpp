@@ -1,5 +1,7 @@
 
 #include "OS.h"
+#include "mc-export-plugin-module.h"
+
 #include <iomanip>
 #include <thread>
 
@@ -25,9 +27,9 @@ void Util::OS::init() {
     timeBeginPeriod(1);
 }
 
-bool Util::OS::windowIsActive(ci::app::WindowRef window) {
-	return (HWND)window->getNative() == GetFocus();
-}
+// bool Util::OS::windowIsActive(ci::app::WindowRef window) {
+// 	return (HWND)window->getNative() == GetFocus();
+// }
 
 bool Util::OS::debuggerPresent() {
 	static bool value = IsDebuggerPresent();
@@ -355,36 +357,36 @@ void Util::OS::errorMessage(const std::string& message) {
 	//MessageBoxExA(GetDesktopWindow(), message.c_str(), "Error", MB_OK | MB_ICONERROR | MB_TASKMODAL, 0);
 }
 
-Util::MemoryStats Util::OS::getMemoryStats() {
-    PROCESS_MEMORY_COUNTERS processMemoryInfo;
-    MEMORYSTATUSEX globalMemoryInfo;
-    globalMemoryInfo.dwLength = sizeof(MEMORYSTATUSEX);
-    const double gb = (1024.0 * 1024.0 * 1024.0);
+// Util::MemoryStats Util::OS::getMemoryStats() {
+//     PROCESS_MEMORY_COUNTERS processMemoryInfo;
+//     MEMORYSTATUSEX globalMemoryInfo;
+//     globalMemoryInfo.dwLength = sizeof(MEMORYSTATUSEX);
+//     const double gb = (1024.0 * 1024.0 * 1024.0);
 
-    bool success = GetProcessMemoryInfo(GetCurrentProcess(), &processMemoryInfo, sizeof(processMemoryInfo));
-    if (!success) {
-        auto error = GetLastError();
-        soft_assert(false, "error");
-    }
+//     bool success = GetProcessMemoryInfo(GetCurrentProcess(), &processMemoryInfo, sizeof(processMemoryInfo));
+//     if (!success) {
+//         auto error = GetLastError();
+//         soft_assert(false, "error");
+//     }
     
-    success = GlobalMemoryStatusEx(&globalMemoryInfo);
-    if (!success) {
-        auto error = GetLastError();
-        soft_assert(false, "error");
-    }
+//     success = GlobalMemoryStatusEx(&globalMemoryInfo);
+//     if (!success) {
+//         auto error = GetLastError();
+//         soft_assert(false, "error");
+//     }
 
-    if (success) {
-        return {
-            globalMemoryInfo.ullTotalPhys / gb,
-            0.0,
-            processMemoryInfo.WorkingSetSize / gb
-        };
-    } else {
-        return {
-            0.0, 0.0, 0.0
-        };
-    }
-}
+//     if (success) {
+//         return {
+//             globalMemoryInfo.ullTotalPhys / gb,
+//             0.0,
+//             processMemoryInfo.WorkingSetSize / gb
+//         };
+//     } else {
+//         return {
+//             0.0, 0.0, 0.0
+//         };
+//     }
+// }
 
 void Util::OS::openURL(const char* url) {
 	ShellExecuteA(0, 0, url, 0, 0, SW_SHOW);
@@ -395,46 +397,46 @@ void Util::OS::openFile(const std::filesystem::path& filePath) {
 	ShellExecuteA(0, "open", pathStr.c_str(), 0, 0, SW_SHOW);
 }
 
-std::optional<std::filesystem::path> showWindowsDialog(ci::app::WindowRef window, int flags) {
-	std::optional<std::filesystem::path> result;
-	HWND hwndOwner = window->getNative() ? static_cast<HWND>(window->getNative()) : nullptr;
-	if (hwndOwner && (window->isFullScreen() || window->isBorderless())) {
-		ShowWindow(hwndOwner, SW_MINIMIZE);
-	}
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-	bool comInitialized = SUCCEEDED(hr);
+// std::optional<std::filesystem::path> showWindowsDialog(ci::app::WindowRef window, int flags) {
+// 	std::optional<std::filesystem::path> result;
+// 	HWND hwndOwner = window->getNative() ? static_cast<HWND>(window->getNative()) : nullptr;
+// 	if (hwndOwner && (window->isFullScreen() || window->isBorderless())) {
+// 		ShowWindow(hwndOwner, SW_MINIMIZE);
+// 	}
+// 	HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+// 	bool comInitialized = SUCCEEDED(hr);
 
-	IFileDialog* pFileDialog = nullptr;
-	hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFileDialog));
-	if (SUCCEEDED(hr)) {
-		DWORD options;
-		pFileDialog->GetOptions(&options);
-		pFileDialog->SetOptions(options | flags);
+// 	IFileDialog* pFileDialog = nullptr;
+// 	hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFileDialog));
+// 	if (SUCCEEDED(hr)) {
+// 		DWORD options;
+// 		pFileDialog->GetOptions(&options);
+// 		pFileDialog->SetOptions(options | flags);
 
-		hr = pFileDialog->Show(hwndOwner);
-		if (SUCCEEDED(hr)) {
-			IShellItem* pItem = nullptr;
-			hr = pFileDialog->GetResult(&pItem);
-			if (SUCCEEDED(hr)) {
-				PWSTR pszFilePath = nullptr;
-				hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
-				if (SUCCEEDED(hr) && pszFilePath) {
-					result = std::filesystem::path(pszFilePath);
-					CoTaskMemFree(pszFilePath);
-				}
-				pItem->Release();
-			}
-		}
-		pFileDialog->Release();
-	}
-	if (comInitialized) {
-		CoUninitialize();
-	}
-	if (hwndOwner) {
-		ShowWindow(hwndOwner, SW_RESTORE);
-	}
-	return result;
-}
+// 		hr = pFileDialog->Show(hwndOwner);
+// 		if (SUCCEEDED(hr)) {
+// 			IShellItem* pItem = nullptr;
+// 			hr = pFileDialog->GetResult(&pItem);
+// 			if (SUCCEEDED(hr)) {
+// 				PWSTR pszFilePath = nullptr;
+// 				hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+// 				if (SUCCEEDED(hr) && pszFilePath) {
+// 					result = std::filesystem::path(pszFilePath);
+// 					CoTaskMemFree(pszFilePath);
+// 				}
+// 				pItem->Release();
+// 			}
+// 		}
+// 		pFileDialog->Release();
+// 	}
+// 	if (comInitialized) {
+// 		CoUninitialize();
+// 	}
+// 	if (hwndOwner) {
+// 		ShowWindow(hwndOwner, SW_RESTORE);
+// 	}
+// 	return result;
+// }
 
 // std::optional<std::filesystem::path> Util::showWindowsFolderDialog(ci::app::WindowRef window) {
 // 	return showWindowsDialog(window, FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM);
@@ -461,7 +463,7 @@ std::filesystem::path Util::OS::getWriteableDirectory(const std::string& appName
 		return writeableDir;
 	}
 	
-    soft_assert(false, "could not get writeable directory");
+    reportFatalErrorC("could not get writeable directory");
 
 	// Fallback to current directory if we can't get AppData
 	return std::filesystem::current_path();

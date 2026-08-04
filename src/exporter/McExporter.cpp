@@ -2,7 +2,7 @@
 
 
 #include "Options.h"
-#include "Theme.hpp"
+#include "Theme.h"
 #include "HeightDatapack.h"
 #include "World.h"
 
@@ -479,7 +479,7 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
     createFolderIfDoesntExist(regionFolder);
     createFolderIfDoesntExist(dataFolder);
 
-	auto rasteriser = api.getNewRasteriser(&worldData, exportDimensions);
+	auto rasteriser =  gameApi.getNewRasteriser(gameApi.context, &worldData, exportDimensions);
     float worldRatio = static_cast<float>(exportDimensions.x) / worldSize.x;
     auto const exportSize = tf_v0_vec2{worldSize.x * worldRatio, worldSize.y*worldRatio};
 

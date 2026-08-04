@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Memory.h"
 #include <filesystem>
 #include <optional>
 #include <functional>
@@ -24,7 +23,7 @@ namespace Util {
 		void safeCall(const std::function<void()>& code);
 		void init();
 		void errorMessage(const std::string& message);
-		MemoryStats getMemoryStats();
+		// MemoryStats getMemoryStats();
 		void openURL(const char* url);
 		void openFile(const std::filesystem::path& filePath);
 		std::filesystem::path getWriteableDirectory(const std::string& appName);

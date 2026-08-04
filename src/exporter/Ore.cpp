@@ -1,6 +1,6 @@
-#include "Includes.h"
+
 #include "Ore.h"
-#include "../Exceptions.h"
+#include "mc-export-plugin-module.h"
 
 using namespace Simulation::Export;
 using namespace Simulation::Export::Minecraft;
@@ -18,12 +18,12 @@ OreDefinition OreDefinition::deserialise(Util::Serialisation::NBT::TagCompound& 
 		} else if (child->name == "worldYPositionDistribution") {
 			value.worldYPositionDistribution = Util::Distribution::deserialise(child->as<NBT::TagCompound>());
 		} else {
-			throw ExportFailed(std::format("Ore {} unknown attribute: {}", value.name, child->name));
+			reportFatalErrorC(std::format("Ore {} unknown attribute: {}", value.name, child->name).c_str());
 		}
 	}
 
 	if (!value.rockDepthDistribution && !value.worldYPositionDistribution) {
-		throw ExportFailed(std::format("Ore {} missing distribution", value.name));
+		reportFatalErrorC(std::format("Ore {} missing distribution", value.name).c_str());
 	}
 
 	return value;
