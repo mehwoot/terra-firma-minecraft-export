@@ -56,6 +56,7 @@ tf_v0_ExporterCallbacks getExporterCallbacks() {
 
 TF_V0_DEFINE_INITIALISE_PLUGIN_MODULE_FUNC {
     tf_v0_PluginCallbacks thisPlugin = {
+        .pluginFriendlyName = "tf2-mc-export",
         .load = &pluginOnLoad,
         .unload = &pluginUnload,
         .getExporterCallbacks = &getExporterCallbacks,
