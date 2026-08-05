@@ -9,6 +9,7 @@
 #include "Util/Perlin.h"
 #include "Util/OS.h"
 #include "Util/Compression.h"
+#include "Util/Strings.h"
 
 #include "mc-export-plugin-module.h"
 
@@ -41,8 +42,33 @@ void createFolderIfDoesntExist(const std::filesystem::path& path) {
 }
 
 
-std::list<Simulation::Export::Minecraft::ThemeDefinition> themeDefinitions;
 
+std::list<ThemeDefinition> const& getThemeDefinitions() {
+    //FIXME this shouldn't use the game's assets folder, it should use the plugin's!
+
+    static auto themeDefinitionsPtr = std::unique_ptr<std::list<ThemeDefinition>>{nullptr};
+
+    if(!themeDefinitionsPtr){
+        themeDefinitionsPtr = std::make_unique<std::list<ThemeDefinition>>();
+
+        std::vector<std::string> defaultThemes = { "default" };
+        auto const assetsFolder = gameApi.getAssetsFolder(gameApi.context);
+        std::filesystem::path themesFolder = std::filesystem::path{assetsFolder} / "export" / "minecraft";
+        
+        for (auto& entry : std::filesystem::directory_iterator(themesFolder)) {
+            if (entry.is_directory()) {
+                ThemeDefinition theme;
+                theme.id = Util::safeString(entry.path().filename());
+                theme.displayName = Util::safeString(entry.path().filename());
+                theme.displayNameIsTranslationKey = std::ranges::contains(defaultThemes, theme.id);
+                theme.folder = entry.path();
+                themeDefinitionsPtr->push_back(std::move(theme));
+            }
+        }
+    }
+
+	return *themeDefinitionsPtr;
+}
 
 float simulationToMinecraftHeight(float simulationHeight, const McExporter::ExportInstance& exportConfig) {
 	simulationHeight -= exportConfig.worldSeaLevel;
@@ -54,13 +80,19 @@ float simulationToMinecraftHeight(float simulationHeight, const McExporter::Expo
 	}
 }
 
+decltype(auto) getDataAt(auto&& array, tf_v0_ivec2 size, tf_v0_ivec2 pos){
+    int x = std::clamp(pos.x, 0, size.x - 1);
+    int y = std::clamp(pos.y, 0, size.y - 1);
+    return array[(y * size.x) + x];
+}
+
 int getMaxHeight(const tf_v0_WorldData& worldData, const McExporter::ExportInstance& exportConfig) {
 	float maxSimulationHeight = std::numeric_limits<float>::lowest();
-    auto const& size = worldData.size;
+    auto const& size = worldData.dimensions;
 
 	for (int x = 0; x < size.x; x++) {
 		for (int z = 0; z < size.y; z++) {
-			auto& waterRow0Data = worldData.waterRow0[z*size.x + x];
+			auto& waterRow0Data = getDataAt(worldData.waterRow0, size, {x,z});//[z*size.x + x];
 			maxSimulationHeight = std::max(maxSimulationHeight, waterRow0Data.totalHeight);
 		}
 	}
@@ -486,8 +518,14 @@ std::optional<McExporter::AsyncCoordinator::Output> McExporter::AsyncCoordinator
 
 void McExporter::run(tf_v0_ExportDataApi& api) {
 
-	// const auto& options = *reinterpret_cast<Options*>(api.getOptions(api.instance));
-	const auto& options = *reinterpret_cast<Options*>(tf_v0_getOptions(api));
+	const auto& optsFromGame = api.getOptions(api.instance);
+
+    //TODO support the other options properly.
+    Options options;
+    options.filename = optsFromGame.filename;
+    options.folder = optsFromGame.folder;
+
+
 
     auto&& worldData = api.getWorldData(api.instance);
 
@@ -523,6 +561,8 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
 
 	int regionXStart = -countRegions.x / 2, regionXEnd = (countRegions.x / 2) - 1,
 		regionZStart = -countRegions.y / 2, regionZEnd = std::max((countRegions.y / 2) - 1, 0);
+
+    auto&& themeDefinitions = getThemeDefinitions();
 
 	auto themeDefinition = std::find_if(themeDefinitions.begin(), themeDefinitions.end(), [&options](const Simulation::Export::Minecraft::ThemeDefinition& theme) {
 		return theme.id == options.themeId;

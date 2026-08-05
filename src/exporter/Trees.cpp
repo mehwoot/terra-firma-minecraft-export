@@ -16,7 +16,7 @@ Placeable::Placeable(const std::string& name, const std::list<BlockToConstruct>&
 
 void Placeable::generate(Region& region, const tf_v0_ivec3& position, int randSeed) const {
 	for (const auto& block : blocks) {
-		auto worldPosition = tf_v0_ivec3{position.x + block.position.x, position.y + block.position.y};
+		auto worldPosition = tf_v0_ivec3{position.x + block.position.x, position.y + block.position.y, position.z + block.position.z};
 		if (replaceAir) {
 			region.setAllBlocksBetweenLocal({worldPosition.x, worldPosition.z}, worldPosition.y, worldPosition.y, block.id);
 		} else {
@@ -32,7 +32,7 @@ CollectionPlaceable::CollectionPlaceable(std::string name, std::vector<Placeable
 void CollectionPlaceable::generate(Region& region, const tf_v0_ivec3& position, int randSeed) const {
 	std::default_random_engine rEng{};
 	rEng.seed(randSeed);
-	auto dist = std::uniform_int_distribution<>{0, static_cast<int>(trees.size())};
+	auto dist = std::uniform_int_distribution<>{0, static_cast<int>(trees.size())-1 /*inclusive*/};
 	auto index = dist(rEng);
 	return trees[index].generate(region, position, randSeed);
 }

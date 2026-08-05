@@ -3,6 +3,8 @@
 #include <ostream>
 #include <fstream>
 
+using namespace Simulation::Export::Minecraft;
+
 static int getPackFormat(MinecraftVersion version) {
 	using namespace Simulation::Export::Minecraft;
 	switch (version) {

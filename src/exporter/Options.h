@@ -3,6 +3,8 @@
 #include <string>
 #include <optional>
 
+namespace Simulation::Export::Minecraft{
+
 enum class MinecraftVersion { V1_20_1, V1_20_2, V1_21_1, V26_1 };
 
 inline constexpr int getDataVersion(MinecraftVersion version) {
@@ -33,5 +35,6 @@ struct Options{
 	std::optional<int> maxHeight;
 	int seaLevel = 32;
 	std::string themeId = "default";
-	MinecraftVersion minecraftVersion = MinecraftVersion::V1_21_1;
+	MinecraftVersion minecraftVersion = MinecraftVersion::V26_1;
 };
+}

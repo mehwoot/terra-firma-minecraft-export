@@ -1,4 +1,6 @@
 
+
+#include "exporter/McExporterCIFace.h"
 #include <Api/v0/Vector.h>
 #include <Api/v0/GameApi.h>
 
@@ -40,29 +42,7 @@ void pluginUnload(){
 }
 
 void exportFunction(tf_v0_ExportDataApi exportDataApi){
-    tf_v0_WorldData worldData = exportDataApi.getWorldData(exportDataApi.instance);
-    
-    printf("tf2-mc-export exportFunction - dimensions: %i x %i\n", worldData.dimensions.x, worldData.dimensions.y);
-
-    // for (int x = 0; x < worldData.dimensions.x; ++x) {
-    //     for (int y = 0; y < worldData.dimensions.y; ++y) {
-    //         auto const val = worldData.waterArray[(y*worldData.dimensions.x) + x ].waterHeight;
-    //         if(val!=0){
-    //             printf("    [%i][%i] waterHeight = %i\n", x, y, val);
-    //         }
-    //     }
-    // }
-
-    for (int x = 0; x < worldData.dimensions.x; ++x) {
-        for (int y = 0; y < worldData.dimensions.y; ++y) {
-            void* instance = worldData.heightCache.instance;
-            tf_v0_vec2 pos = {x*1.f,y*1.f};
-            float const val = worldData.heightCache.getHeightAt(instance, pos, TF_V0_HM_LAND_AND_WATER);
-            if(val!=0){
-                printf("    [%i][%i] height@ = %f\n", x, y, val);
-            }
-        }
-    }
+    doExport(&exportDataApi);
 }
 
 tf_v0_ExporterCallbacks getExporterCallbacks() {
