@@ -113,8 +113,8 @@ void writeHeightDatapack(const std::filesystem::path& folder, int maxHeight, Min
 
 float getMinecraftTemperature(const tf_v0_WorldData& worldData, const McExporter::ExportInstance& exportConfig) {
 	float middleTemp = worldData.worldConfig.getTemperatureCelsius(
-        worldData.worldConfig.instance, 0.f, tf_v0_vec2(0.5f, 0.5f), 
-        worldData.worldConfig.getGameDaysOfYear(worldData.worldConfig.instance)
+        worldData.worldConfig.context, 0.f, tf_v0_vec2(0.5f, 0.5f), 
+        worldData.worldConfig.getGameDaysOfYear(worldData.worldConfig.context)
     );
 	float simulationHeightAtZeroCelsius = middleTemp * 40.f;
 	float minecraftHeightAtZeroCelsius = simulationToMinecraftHeight(simulationHeightAtZeroCelsius, exportConfig);
@@ -254,8 +254,8 @@ Buffer exportRegion(int regionX, int regionZ, const McExporter::ExportInstance& 
 			auto minecraftRegionCoords= tf_v0_ivec2{localX, localZ};
             auto const minecraftWorldCoords = tf_v0_ivec2{regionStartMinecraftCoords.x + localX, regionStartMinecraftCoords.y+ localZ};
 
-            if (!exportConfig.rasteriser.validPoint(exportConfig.rasteriser.instance, localPosition)) continue;
-            auto worldPoint = exportConfig.rasteriser.getWorldPoint(exportConfig.rasteriser.instance, localPosition);
+            if (!exportConfig.rasteriser.validPoint(exportConfig.rasteriser.context, localPosition)) continue;
+            auto worldPoint = exportConfig.rasteriser.getWorldPoint(exportConfig.rasteriser.context, localPosition);
             // tf_v0_ivec2 worldPosInt = {static_cast<int>(worldPosition.x), static_cast<int>(worldPosition.y)};
             // tf_v0_ivec2 dataPosition = tf_v0_convertWorldToLocalInt(worldPosInt, exportConfig.worldResolution);
 
@@ -349,8 +349,8 @@ Buffer exportRegion(int regionX, int regionZ, const McExporter::ExportInstance& 
 				randomDistribution.seed(randSeed);
 				tf_v0_vec2 minecraftPosition = tf_v0_vec2(minecraftRegionCoords.x + randomDistribution.randInt(-1, 2), minecraftRegionCoords.y + randomDistribution.randInt(-1, 2));
 				tf_v0_vec2 worldPosition = region.convertMinecraftRegionCoordinatesToGameWorldCoordinates(minecraftPosition);
-				float gameLandHeight = exportConfig.heightCache.getHeightAt(exportConfig.heightCache.instance, worldPosition, TF_V0_HM_LAND_ONLY);
-				float gameWaterHeight = exportConfig.heightCache.getHeightAt(exportConfig.heightCache.instance, worldPosition, TF_V0_HM_WATER_ONLY);
+				float gameLandHeight = exportConfig.heightCache.getHeightAt(exportConfig.heightCache.context, worldPosition, TF_V0_HM_LAND_ONLY);
+				float gameWaterHeight = exportConfig.heightCache.getHeightAt(exportConfig.heightCache.context, worldPosition, TF_V0_HM_WATER_ONLY);
 
                 float treeRand = randomDistribution.randFloat();
                 for (auto& plantDefinition : biome.trees) {
@@ -518,7 +518,7 @@ std::optional<McExporter::AsyncCoordinator::Output> McExporter::AsyncCoordinator
 
 void McExporter::run(tf_v0_ExportDataApi& api) {
 
-	const auto& optsFromGame = api.getOptions(api.instance);
+	const auto& optsFromGame = api.getOptions(api.context);
 
     //TODO support the other options properly.
     Options options;
@@ -527,7 +527,7 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
 
 
 
-    auto&& worldData = api.getWorldData(api.instance);
+    auto&& worldData = api.getWorldData(api.context);
 
     auto const worldSize = worldData.size;
     auto const worldResolution = worldData.resolution;
@@ -557,7 +557,7 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
     float worldRatio = static_cast<float>(exportDimensions.x) / worldSize.x;
     auto const exportSize = tf_v0_vec2{worldSize.x * worldRatio, worldSize.y*worldRatio};
 
-	api.setProgress(api.instance, 0.1f);
+	api.setProgress(api.context, 0.1f);
 
 	int regionXStart = -countRegions.x / 2, regionXEnd = (countRegions.x / 2) - 1,
 		regionZStart = -countRegions.y / 2, regionZEnd = std::max((countRegions.y / 2) - 1, 0);
@@ -595,7 +595,7 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
         .worldResolution = worldData.resolution,
 		.maxHeight = 2031,
 		.seaLevel = options.seaLevel,
-        .worldSeaLevel = worldData.worldConfig.worldMetresToSimulationUnits(worldData.instance, worldData.worldConfig.seaLevelMetres),
+        .worldSeaLevel = worldData.worldConfig.worldMetresToSimulationUnits(worldData.context, worldData.worldConfig.seaLevelMetres),
 		.blockRegistry = {},
 		.theme = themeDefinition->loadTheme(),
 		.minecraftVersion = options.minecraftVersion
@@ -628,7 +628,7 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
         }
     }
 
-    if (api.getCancelled(api.instance)) {
+    if (api.getCancelled(api.context)) {
         return;
     }
 
@@ -661,11 +661,11 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
         auto outputOpt = asyncCoordinator.popOutput();
         if (outputOpt) {
             regionsProcessed++;
-            api.setProgress(api.instance, 0.1f + (regionsProcessed / static_cast<float>(regionsToProcess) * 0.88f));
+            api.setProgress(api.context, 0.1f + (regionsProcessed / static_cast<float>(regionsToProcess) * 0.88f));
             auto& output = outputOpt.value();
             output.buffer.writeToFile(exportConfig.folder / std::filesystem::path(std::format("r.{}.{}.mca", output.region.x, output.region.z)));
         }
-        if (api.getCancelled(api.instance)) {
+        if (api.getCancelled(api.context)) {
             while (regionsProcessed < regionsToProcess) {
                 asyncCoordinator.popInput();
                 regionsProcessed++;
@@ -677,12 +677,12 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
         thread.join();
     }
 
-    if (api.getCancelled(api.instance)) {
+    if (api.getCancelled(api.context)) {
         return;
     }
 
     tf_v0_vec2 middleCoordinates = tf_v0_vec2(worldSize.x / 2, worldSize.y/2);
-    float spawnHeight = worldData.heightCache.getHeightAt(worldData.heightCache.instance, middleCoordinates, TF_V0_HM_LAND_AND_WATER) + 20.f;
+    float spawnHeight = worldData.heightCache.getHeightAt(worldData.heightCache.context, middleCoordinates, TF_V0_HM_LAND_AND_WATER) + 20.f;
 
     Minecraft::World minecraftWorld(options.filename, spawnHeight, options.minecraftVersion);
     Buffer minecraftWorldBuffer = minecraftWorld.write();
