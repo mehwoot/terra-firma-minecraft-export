@@ -1,5 +1,5 @@
 #pragma once
-#include "API/v0/Vector.h"
+#include "Api/v0/Vector.h"
 #include "Buffer.h"
 #include "Macros.h"
 #include <set>
@@ -24,14 +24,13 @@ namespace Util {
 				Tag(Tag&& other) : id(other.id), name(std::move(other.name)) {}
 				virtual ~Tag() {}
 
-				template<class T>
+				template <class T>
 				T& as() {
 					try {
 						return dynamic_cast<T&>(*this);
 					} catch (std::bad_cast) {
 						throw ::std::runtime_error(std::format("Expected {} to be {}", name, typeid(T).name()));
 					}
-
 				}
 				virtual void write(::Buffer& buffer);
 				virtual void writePayload(::Buffer& buffer) = 0;
@@ -99,7 +98,7 @@ namespace Util {
 				static int ID;
 			};
 
-			template<int size>
+			template <int size>
 			struct TagStaticByteArray : public Tag {
 				std::array<uint8_t, size> values;
 				TagStaticByteArray(uint8_t value, const std::string& name) : Tag(7, name) { std::fill(values.begin(), values.end(), value); }
@@ -124,7 +123,7 @@ namespace Util {
 				TagList(const std::vector<std::string>& values, const std::string& name);
 				TagList(const std::set<std::string>& values, const std::string& name);
 				TagList(const std::set<int>& values, const std::string& name);
-				
+
 				virtual void writePayload(::Buffer& buffer) override;
 
 				static TagUPtr serialiseivec2(const tf_v0_ivec2& value, const std::string& name);

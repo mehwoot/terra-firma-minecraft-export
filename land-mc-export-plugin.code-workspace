@@ -120,7 +120,6 @@
 			"xutility": "cpp",
 			"*.ipp": "cpp"
 		},
-		"cmake-debug-disabled": true,
 		"files.exclude": {
 			"**/.git": true,
 			"**/.svn": true,
@@ -130,7 +129,18 @@
 			"//.*": true
 		},
 		"explorerExclude.backup": {},
-		"cSpell.enabled": false
+		"cSpell.enabled": false,
+		"[cpp]": {
+			"editor.wordBasedSuggestions": "off",
+			"editor.semanticHighlighting.enabled": true,
+			"editor.stickyScroll.defaultModel": "foldingProviderModel",
+			"editor.suggest.insertMode": "replace",
+			"editor.detectIndentation": false,
+			"editor.formatOnPaste": true,
+			"editor.formatOnType": true,
+			"editor.formatOnSave": false,
+		}
+
 	},
 	
 }
