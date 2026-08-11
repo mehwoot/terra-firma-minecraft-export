@@ -17,13 +17,27 @@ inline constexpr int getDataVersion(MinecraftVersion version) {
 	}
 }
 
-inline std::string getVersionName(MinecraftVersion version) {
+constexpr inline std::string getVersionName(MinecraftVersion version) {
 	switch (version) {
 		case MinecraftVersion::V1_20_1: return "1.20.1";
 		case MinecraftVersion::V1_20_2: return "1.20.2";
 		case MinecraftVersion::V1_21_1: return "1.21.1";
 		case MinecraftVersion::V26_1: return "26.1";
 		default: return "26.1";
+	}
+}
+
+constexpr inline auto getVersionByName(auto&& versionString) {
+	if (versionString == "1.20.1") {
+		return MinecraftVersion::V1_20_1;
+	} else if (versionString == "1.20.2") {
+		return MinecraftVersion::V1_20_2;
+	} else if (versionString == "1.21.1") {
+		return MinecraftVersion::V1_21_1;
+	} else if (versionString == "26.1") {
+		return MinecraftVersion::V26_1;
+	} else {
+		return MinecraftVersion::V26_1;
 	}
 }
 

@@ -512,7 +512,19 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
 	// TODO support the other options properly.
 	Options options;
 	options.filename = optsFromGame.filename;
+	gameApi.log(gameApi.context, std::format("filename: {}", options.filename).c_str());
 	options.folder = optsFromGame.folder;
+	gameApi.log(gameApi.context, std::format("folder: {}", options.folder).c_str());
+	options.exportMapWidth = api.getConfigValueInt(api.context, "exportMapWidth");
+	gameApi.log(gameApi.context, std::format("exportMapWidth: {}", options.exportMapWidth).c_str());
+	options.maxHeight = api.getConfigValueInt(api.context, "autoCalculate")
+	? std::nullopt
+	: std::make_optional(api.getConfigValueInt(api.context, "maxHeight"));
+	gameApi.log(gameApi.context, std::format("maxHeight: {}", options.maxHeight.value_or(-1)).c_str());
+	options.minecraftVersion = getVersionByName(api.getConfigValueString(api.context, "minecraftVersion"));
+	gameApi.log(gameApi.context, std::format("minecraftVersion: {}", getVersionName(options.minecraftVersion)).c_str());
+	options.themeId = api.getConfigValueString(api.context, "theme");
+	gameApi.log(gameApi.context, std::format("themeId: {}", options.themeId).c_str());
 
 	auto&& worldData = api.getWorldData(api.context);
 
