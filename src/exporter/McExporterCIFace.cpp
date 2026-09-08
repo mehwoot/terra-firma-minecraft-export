@@ -4,9 +4,8 @@
 
 extern "C" {
 
-void doExport(tf_v0_ExportDataApi* api){
+tf_v0_ExportResult doExport(tf_v0_ExportDataApi* api) {
 	auto exporter = Simulation::Export::Minecraft::McExporter {};
-	exporter.run(*api);
+	return exporter.run(*api);
 }
-
 }

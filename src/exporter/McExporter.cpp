@@ -505,7 +505,7 @@ std::optional<McExporter::AsyncCoordinator::Output> McExporter::AsyncCoordinator
 	}
 }
 
-void McExporter::run(tf_v0_ExportDataApi& api) {
+tf_v0_ExportResult McExporter::run(tf_v0_ExportDataApi& api) {
 
 	const auto& optsFromGame = api.getOptions(api.ctx);
 
@@ -628,7 +628,7 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
 	}
 
 	if (api.getCancelled(api.ctx)) {
-		return;
+		return tf_v0_ExportResult::TF_V0_ER_CANCELLED;
 	}
 
 	auto processor = [&asyncCoordinator]() {
@@ -674,7 +674,7 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
 	}
 
 	if (api.getCancelled(api.ctx)) {
-		return;
+		return tf_v0_ExportResult::TF_V0_ER_CANCELLED;
 	}
 
 	tf_v0_vec2 middleCoordinates = tf_v0_vec2(worldSize.x / 2, worldSize.y / 2);
@@ -714,4 +714,5 @@ void McExporter::run(tf_v0_ExportDataApi& api) {
 			Util::Serialisation::gzipCompress(clockOutput).writeToFile(dataFolder / "world_clocks.dat");
 		}
 	}
+	return tf_v0_ExportResult::TF_V0_ER_SUCCESS;
 }

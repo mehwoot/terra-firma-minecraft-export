@@ -54,9 +54,9 @@ class McExporter{
 			const ExportInstance& getConfig() const { return config; }
 		};
 
-	void run(tf_v0_ExportDataApi& api);
+		tf_v0_ExportResult run(tf_v0_ExportDataApi& api);
 
-	// private:
-	// 	static std::list<Simulation::Export::Minecraft::ThemeDefinition> themeDefinitions;
+		// private:
+		// 	static std::list<Simulation::Export::Minecraft::ThemeDefinition> themeDefinitions;
 };
 }

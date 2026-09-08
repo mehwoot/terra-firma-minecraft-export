@@ -6,7 +6,7 @@
 extern "C"{
 #endif
 
-void doExport(tf_v0_ExportDataApi* api);
+tf_v0_ExportResult doExport(tf_v0_ExportDataApi* api);
 
 #if defined(__cplusplus)
 }

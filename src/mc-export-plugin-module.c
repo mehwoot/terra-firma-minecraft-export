@@ -39,8 +39,8 @@ void pluginUnload() {
 	gameApi.log(gameApi.ctx, "tf2-mc-export pluginUnload running");
 }
 
-void exportFunction(tf_v0_ExportDataApi exportDataApi) {
-	doExport(&exportDataApi);
+tf_v0_ExportResult exportFunction(tf_v0_ExportDataApi exportDataApi) {
+	return doExport(&exportDataApi);
 }
 
 size_t getAvailableThemes(char*** availableThemesPtr) {
