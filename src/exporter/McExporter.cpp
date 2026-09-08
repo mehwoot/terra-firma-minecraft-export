@@ -509,7 +509,6 @@ tf_v0_ExportResult McExporter::run(tf_v0_ExportDataApi& api) {
 
 	const auto& optsFromGame = api.getOptions(api.ctx);
 
-	// TODO support the other options properly.
 	Options options;
 	options.filename = optsFromGame.filename;
 	gameApi.log(gameApi.ctx, std::format("filename: {}", options.filename).c_str());
