@@ -1,0 +1,87 @@
+# yaml-language-server: $schema=https://json.schemastore.org/clang-format.json
+#
+# Tuned to match the existing codebase, which is almost entirely the work of
+# Gareth Robinson (GitHub: mehwoot). ColumnLimit is intentionally 0: the code is
+# hand-wrapped and never reflowed to a fixed width, so clang-format acts mainly
+# as an indentation/whitespace normaliser rather than a re-flow tool.
+
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: Latest
+
+# Indentation: real tabs, 4 wide. Namespaces indent their contents.
+UseTab: Always
+TabWidth: 4
+IndentWidth: 4
+ContinuationIndentWidth: 4
+NamespaceIndentation: All
+AccessModifierOffset: -4
+IndentCaseLabels: false
+# Scoped case bodies wrap the block in a brace on its own indented line:
+#     case FOO:
+#         {
+#             ...
+#         }
+#         break;
+IndentCaseBlocks: true
+
+# Do not reflow lines; the codebase wraps by hand.
+ColumnLimit: 0
+
+# Pointers and references bind to the type (Config::Root& x, Store* p).
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+# Braces attach (K&R): "} else {", "} catch {" all stay on one line.
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: false
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+# Keep inline getters/setters and guard-clause ifs on a single line.
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: All
+AllowShortEnumsOnASingleLine: true
+
+# Braced init lists carry inner spaces: { a, b } not {a, b}.
+Cpp11BracedListStyle: false
+
+# template<...> on its own line above the declaration.
+AlwaysBreakTemplateDeclarations: Yes
+
+# Constructor initializer lists: leading colon/commas, bin-packed, continuation
+# lines sit two tabs in (matching the hand-written style).
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: BinPack
+ConstructorInitializerIndentWidth: 8
+
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpaceInEmptyParentheses: false
+
+# Includes are grouped by hand (not alphabetical) - never reorder them.
+# SortIncludes: Never
+SortIncludes:
+  Enabled: false
+SortUsingDeclarations: Never
+FixNamespaceComments: false

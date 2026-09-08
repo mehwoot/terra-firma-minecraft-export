@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=https://schemastore.org/clangd.json
+
+CompileFlags:
+  CompilationDatabase: ./build/
